@@ -4,6 +4,8 @@ import { Box } from "@mui/system";
 import { LoadingButton } from '@mui/lab';
 import OsuUserHeaderCard from '../Components/OsuUserHeaderCard';
 import OsuUserRanksCard from '../Components/OsuUserRanksCard';
+import { parse } from 'node-html-parser';
+const helper = require('../Helper');
 
 const osu = require('node-osu');
 
@@ -16,38 +18,21 @@ function PageDirectStats() {
         setWorkingState(true);
 
         const username = document.getElementById('input_username').value;
-        const apikey = document.getElementById('input_apikey').value;
 
-        const osuApi = new osu.Api(apikey, {
-            notFoundAsError: true,
-            completeScores: false,
-            parseNumeric: false
-        });
-
-        osuApi.apiCall('/get_user', { u: username }).then(user => {
-            osuApi.getUserBest({ u: username, limit: 100 }).then(best => {
-                setWorkingState(false);
-                user[0].best = best;
-                console.log(user[0]);
-                setCurrentUser(user[0]);
-            }).catch(err => {
-                console.log(err);
-                setWorkingState(false);
-            });
-            // setCurrentUser(user[0]);
+        //this mirrors whatever the api returns, but without having any token authentication stuff in here
+        fetch(`https://darkchii.nl/osu/api.php?user=${username}`).then(res => res.json()).then(data => {
+            setCurrentUser(data);
         }).catch(err => {
             console.log(err);
+        }).finally(() => {
             setWorkingState(false);
         });
-
     };
 
     return (
         <>
             <Box>
                 <TextField id="input_username" label="Username" variant="standard" sx={{ width: 1 }} />
-                <TextField id="input_apikey" label="API Key" variant="standard" sx={{ width: 1 }} />
-                <Typography variant="caption">Find it at <a target="_blank" rel="noreferrer" href="https://osu.ppy.sh/p/api/">osu.ppy.sh/p/api/</a></Typography><br />
                 <LoadingButton sx={{ mt: 2 }} variant="contained" onClick={handleRequest} loading={working} disabled={working}>Check</LoadingButton>
             </Box>
             {user && <Box sx={{ mt: 2 }}>
